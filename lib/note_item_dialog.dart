@@ -1,6 +1,7 @@
 import 'package:note_app/note.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/note_view.dart';
+import 'package:note_app/note_view_invalid_password_dialog.dart';
 
 class NoteItemDialog extends StatefulWidget {
   NoteItemDialog({Key key, this.note}) : super(key: key);
@@ -80,6 +81,18 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                             }
 
                             Navigator.pop(context);
+
+                            try {
+                              note.decrypt(passwordController.text);
+                            } catch (error) {
+                              showDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (context) =>
+                                      NoteViewInvalidPasswordDialog());
+                              return;
+                            }
+
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(

@@ -2,6 +2,8 @@ import 'package:note_app/note.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/note_item_dialog.dart';
 import 'package:note_app/note_item_delete_dialog.dart';
+import 'package:note_app/note_item_change_password_dialog.dart';
+
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class NoteItem extends StatelessWidget {
@@ -27,9 +29,17 @@ class NoteItem extends StatelessWidget {
           actionPane: SlidableDrawerActionPane(),
           secondaryActions: <Widget>[
             IconSlideAction(
-              caption: 'More',
+              caption: 'Change password',
               color: Colors.grey.shade200,
               icon: Icons.more_horiz,
+              onTap: () async {
+                showDialog(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (context) =>
+                      NoteItemChangePasswordDialog(note: note),
+                );
+              },
             ),
             IconSlideAction(
               caption: 'Delete',

@@ -32,11 +32,43 @@ class NoteRepository {
     return note.id;
   }
 
+  List<Note> parseNoteToObj(List<Map> maps) {
+    List<Note> notesList = [];
+
+    if (maps.length > 0) {
+      maps.forEach((map) {
+        notesList.add(Note.fromDb(
+          id: map['id'],
+          title: map['title'],
+          content: map['content'],
+        ));
+      });
+    }
+
+    return notesList;
+  }
+
   Future<void> deleteNote(String id) async {
     await database.then((db) => db.delete(
           'notes',
           where: "id = ?",
           whereArgs: [id],
         ));
+  }
+
+  Future<void> updateNote(Note note) async {
+    await database.then((db) => db.update(
+          'notes',
+          note.toMap(),
+          where: 'id = ?',
+          whereArgs: [note.id],
+        ));
+  }
+
+  Future<void> changePassword(
+      Note note, String oldPassword, String newPassword) async {
+    var updatedNote = note.changePassword(oldPassword, newPassword);
+
+    await updateNote(updatedNote);
   }
 }

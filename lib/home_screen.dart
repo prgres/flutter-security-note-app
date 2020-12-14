@@ -92,37 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: <Widget>[
                         noteItemList[index],
-                        //   Slidable(
-                        //     key: ValueKey(noteItemList[index].note.title),
-                        //     actionPane: SlidableDrawerActionPane(),
-                        //     secondaryActions: <Widget>[
-                        //       IconSlideAction(
-                        //         caption: 'More',
-                        //         color: Colors.grey.shade200,
-                        //         icon: Icons.more_horiz,
-                        //       ),
-                        //       IconSlideAction(
-                        //         caption: 'Delete',
-                        //         color: Colors.red,
-                        //         icon: Icons.delete,
-                        //         onTap: () async {
-                        //           showDialog(
-                        //             context: context,
-                        //             barrierDismissible: true,
-                        //             builder: (context) => NoteItemDeleteDialog(
-                        //                 note: noteItemList[index].note,
-                        //                 refreshCallback: setNotesList),
-                        //           );
-                        //         },
-                        //       ),
-                        //     ],
-                        //     dismissal: SlidableDismissal(
-                        //       child: SlidableDrawerDismissal(),
-                        //     ),
-                        //     child: ListTile(
-                        //       title: Text(noteItemList[index].note.title),
-                        //     ),
-                        //   )
                       ],
                     ),
                   );

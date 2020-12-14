@@ -38,13 +38,13 @@ class Note {
 
     var encrypter = enc.Encrypter(enc.AES(key));
 
-    try {
-      var decrypted =
-          encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
-      return decrypted;
-    } catch (error) {
-      return content;
-    }
+    // try {
+    var decrypted =
+        encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
+    return decrypted;
+    // } catch (error) {
+    // return content;
+    // }
   }
 
   String encrypt(String content, String password) {
@@ -58,16 +58,19 @@ class Note {
   }
 
   Map<String, dynamic> toMap() {
-    // print("toMap()");
-    // print(this.id);
-    // print(this.title);
-    // print(this.content);
-
     return {
       'id': this.id,
       'title': this.title,
       'content': this.content,
     };
+  }
+
+  Note changePassword(String oldPassword, newPassword) {
+    var decrypted = decrypt(oldPassword);
+    var encrypted = encrypt(decrypted, newPassword);
+    this.content = encrypted;
+
+    return this;
   }
 
   Note({@required this.title, @required content, @required password}) {

@@ -29,7 +29,11 @@ class _NoteView extends State<NoteView> {
             child: Center(
                 child: RichText(
                     text: TextSpan(
-          text: note.decrypt(password),
+          text: () {
+            return note.decrypt(password);
+
+            // Navigator.pop(context);
+          }(),
           style: TextStyle(
             fontSize: 20,
             color: Colors.black,
