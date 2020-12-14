@@ -80,8 +80,6 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                               return;
                             }
 
-                            Navigator.pop(context);
-
                             try {
                               note.decrypt(passwordController.text);
                             } catch (error) {
@@ -92,6 +90,8 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                                       NoteViewInvalidPasswordDialog());
                               return;
                             }
+
+                            Navigator.pop(context);
 
                             Navigator.push(
                                 context,
