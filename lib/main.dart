@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/home_screen.dart';
-// import 'package:note_app/services/database.dart';
-// import 'package:note_app/services/repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // NotesDatabaseService.db.getDB();
-  // await NoteRepository().database;
-
   runApp(SecNoteApp());
 }
 

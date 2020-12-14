@@ -29,20 +29,25 @@ class _HomeScreenState extends State<HomeScreen> {
     setNotesList();
   }
 
-  setNotesList() async {
+  Future<void> setNotesList() async {
     print("Entered setNotes");
     var fetchedNotes = await NoteRepository().getNotesFromDB();
 
     setState(() {
-      var notes = fetchedNotes;
-      List<NoteItem> tmpList = [];
-
-      for (var it in parseNoteToObj(notes)) {
-        tmpList.add(NoteItem(note: it));
-      }
-
-      this.noteItemList = tmpList;
+      refreshList(fetchedNotes);
     });
+  }
+
+  void refreshList(notes) {
+    List<NoteItem> tmpList = [];
+
+    for (var it in parseNoteToObj(
+      notes,
+    )) {
+      tmpList.add(NoteItem(note: it, refreshCallback: setNotesList));
+    }
+
+    this.noteItemList = tmpList;
   }
 
   List<Note> parseNoteToObj(List<Map> maps) {
@@ -66,13 +71,64 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: ListView(
-          children: noteItemList,
-        ),
+        body: _buildList(),
         floatingActionButton: FloatingActionButton(
           onPressed: _addButtonTap,
           tooltip: 'Increment',
           child: Icon(Icons.add),
         ),
       );
+
+  Widget _buildList() {
+    return noteItemList.length != 0
+        ? RefreshIndicator(
+            child: ListView.builder(
+                padding: EdgeInsets.only(
+                    left: 20.0, right: 20.0, top: 20.0, bottom: 20.0),
+                itemCount: noteItemList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return new Card(
+                    margin: EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      children: <Widget>[
+                        noteItemList[index],
+                        //   Slidable(
+                        //     key: ValueKey(noteItemList[index].note.title),
+                        //     actionPane: SlidableDrawerActionPane(),
+                        //     secondaryActions: <Widget>[
+                        //       IconSlideAction(
+                        //         caption: 'More',
+                        //         color: Colors.grey.shade200,
+                        //         icon: Icons.more_horiz,
+                        //       ),
+                        //       IconSlideAction(
+                        //         caption: 'Delete',
+                        //         color: Colors.red,
+                        //         icon: Icons.delete,
+                        //         onTap: () async {
+                        //           showDialog(
+                        //             context: context,
+                        //             barrierDismissible: true,
+                        //             builder: (context) => NoteItemDeleteDialog(
+                        //                 note: noteItemList[index].note,
+                        //                 refreshCallback: setNotesList),
+                        //           );
+                        //         },
+                        //       ),
+                        //     ],
+                        //     dismissal: SlidableDismissal(
+                        //       child: SlidableDrawerDismissal(),
+                        //     ),
+                        //     child: ListTile(
+                        //       title: Text(noteItemList[index].note.title),
+                        //     ),
+                        //   )
+                      ],
+                    ),
+                  );
+                }),
+            onRefresh: setNotesList,
+          )
+        : Center(child: CircularProgressIndicator());
+  }
 }

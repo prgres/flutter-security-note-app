@@ -18,12 +18,7 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
 
   final Note note;
   @override
-  Widget build(BuildContext context) =>
-      // showDialog(
-      // context: context,
-      // barrierDismissible: false,
-      // builder: (context) {
-      Dialog(
+  Widget build(BuildContext context) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),
@@ -70,6 +65,7 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                       children: <Widget>[
                         FlatButton(
                           onPressed: () {
+                            passwordController.text = "";
                             Navigator.pop(context);
                           },
                           child: Text("Dismiss"),
@@ -77,12 +73,12 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                         FlatButton(
                           onPressed: () {
                             if (passwordController.text.isEmpty) {
-                              // setState((){
-                              _passwordValid = false;
-                              // })ń
+                              setState(() {
+                                _passwordValid = false;
+                              });
                               return;
                             }
-                            passwordController.text = "";
+
                             Navigator.pop(context);
                             Navigator.push(
                                 context,
@@ -90,7 +86,8 @@ class _NoteItemDialogState extends State<NoteItemDialog> {
                                     builder: (context) => NoteView(
                                           note: note,
                                           password: passwordController.text,
-                                        )));
+                                        ))).whenComplete(
+                                () => passwordController.text = "");
                           },
                           child: Text("Unlock"),
                         ),
