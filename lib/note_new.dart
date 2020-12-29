@@ -42,9 +42,9 @@ class _NoteNewView extends State<NoteNewView> {
           title: Text("New note"),
         ),
         body: Padding(
-            padding: const EdgeInsets.all(50.0),
-            // child: Flexible(
-            child: Column(children: <Widget>[
+            padding: const EdgeInsets.all(20.0),
+            child: SingleChildScrollView(
+                child: Column(children: <Widget>[
               TextField(
                 autofocus: true,
                 controller: titleController,
@@ -53,7 +53,7 @@ class _NoteNewView extends State<NoteNewView> {
                   labelText: 'Tittle',
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -62,7 +62,7 @@ class _NoteNewView extends State<NoteNewView> {
                   labelText: 'Password',
                 ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: 15),
               TextField(
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
@@ -70,8 +70,8 @@ class _NoteNewView extends State<NoteNewView> {
                   ),
                   controller: contenteController,
                   keyboardType: TextInputType.multiline,
-                  maxLines: 20),
-            ])),
+                  maxLines: 15),
+            ]))),
         floatingActionButton: FloatingActionButton(
           onPressed: _save,
           tooltip: 'Increment',
