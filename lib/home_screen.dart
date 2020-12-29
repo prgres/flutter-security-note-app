@@ -41,9 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void refreshList(notes) {
     List<NoteItem> tmpList = [];
 
-    for (var it in parseNoteToObj(
-      notes,
-    )) {
+    for (var it in parseNoteToObj(notes)) {
       tmpList.add(NoteItem(note: it, refreshCallback: setNotesList));
     }
 
@@ -53,15 +51,17 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Note> parseNoteToObj(List<Map> maps) {
     List<Note> notesList = [];
 
-    if (maps.length > 0) {
-      maps.forEach((map) {
-        notesList.add(Note.fromDb(
-          id: map['id'],
-          title: map['title'],
-          content: map['content'],
-        ));
-      });
+    if (maps.length == 0) {
+      return notesList;
     }
+
+    maps.forEach((map) {
+      notesList.add(Note.fromDb(
+        id: map['id'],
+        title: map['title'],
+        content: map['content'],
+      ));
+    });
 
     return notesList;
   }

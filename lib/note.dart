@@ -38,13 +38,9 @@ class Note {
 
     var encrypter = enc.Encrypter(enc.AES(key));
 
-    // try {
     var decrypted =
         encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
     return decrypted;
-    // } catch (error) {
-    // return content;
-    // }
   }
 
   String encrypt(String content, String password) {
