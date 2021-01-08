@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:note_app/biometric.dart';
 import 'package:note_app/home_screen.dart';
 import 'package:note_app/startup/startup.dart';
 

@@ -1,7 +1,6 @@
 import 'package:note_app/model/note.dart';
 import 'package:note_app/services/database.dart';
 import 'package:sqflite/sqflite.dart';
-import 'crypto.dart';
 import 'login.dart';
 
 class NoteRepository {
@@ -28,7 +27,7 @@ class NoteRepository {
             'user',
             {
               "id": "default",
-              "password": Crypto().generatePasswordHash(password),
+              "password": LoginService().generatePasswordHash(password),
             },
             conflictAlgorithm: ConflictAlgorithm.replace,
           ))
@@ -39,48 +38,39 @@ class NoteRepository {
             'user',
             {
               "id": "default",
-              "password": Crypto().generatePasswordHash(password),
+              "password": LoginService().generatePasswordHash(password),
             },
             where: 'id = ?',
             whereArgs: ["default"],
           ))
       .whenComplete(() async => await LoginService().savePassword(password));
 
-  Future<List<Note>> getNotesFromDB() async {
-    final rawNotes = await database.then((db) => db.query('notes'));
-    List<Note> noteList = [];
+  Future<List<Note>> getNotesFromDB() async =>
+      await database.then((db) => db.query('notes')).then((rawNotes) =>
+          rawNotes.map((value) => (Note.parseFromDb(value))).toList());
 
-    rawNotes.forEach((e) => noteList.add(Note.parseFromDb(e)));
+  Future<String> insertNote(Note note) async => await database
+      .then((db) => db.insert(
+            'notes',
+            note.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          ))
+      .then((e) => note.id);
 
-    return noteList;
-  }
+  Future<void> deleteNote(String id) async =>
+      await database.then((db) => db.delete(
+            'notes',
+            where: "id = ?",
+            whereArgs: [id],
+          ));
 
-  Future<String> insertNote(Note note) async {
-    await database.then((db) => db.insert(
-          'notes',
-          note.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        ));
-
-    return note.id;
-  }
-
-  Future<void> deleteNote(String id) async {
-    await database.then((db) => db.delete(
-          'notes',
-          where: "id = ?",
-          whereArgs: [id],
-        ));
-  }
-
-  Future<void> updateNote(Note note) async {
-    await database.then((db) => db.update(
-          'notes',
-          note.toMap(),
-          where: 'id = ?',
-          whereArgs: [note.id],
-        ));
-  }
+  Future<void> updateNote(Note note) async =>
+      await database.then((db) => db.update(
+            'notes',
+            note.toMap(),
+            where: 'id = ?',
+            whereArgs: [note.id],
+          ));
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
     final allNote = await this.getNotesFromDB();
@@ -90,7 +80,5 @@ class NoteRepository {
       var updatedNote = note.changePassword(oldPassword, newPassword);
       await updateNote(updatedNote);
     });
-
-    // this.getNotesFromDB()
   }
 }
