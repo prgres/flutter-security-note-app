@@ -1,44 +1,37 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:note_app/note.dart';
+import 'package:note_app/model/note.dart';
 
-class NoteView extends StatefulWidget {
-  NoteView({Key key, @required this.note, @required this.password})
-      : super(key: key);
+class NoteView extends StatelessWidget {
+  NoteView({Key key, @required this.note, @required this.password});
 
   final Note note;
   final String password;
 
-  @override
-  State<StatefulWidget> createState() =>
-      _NoteView(note: note, password: password);
-}
-
-class _NoteView extends State<NoteView> {
-  final Note note;
-  final String password;
-
-  _NoteView({@required this.note, @required this.password});
+  String _decryptNote(String password) {
+    try {
+      return note.decrypt(password);
+    } catch (e) {
+      print("decryption failed");
+      print(e);
+      return "decryption failed";
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text("note"),
-        ),
+        appBar: AppBar(title: Text("note")),
         body: Container(
-            child: Center(
-                child: RichText(
-                    text: TextSpan(
-          text: () {
-            return note.decrypt(password);
-
-            // Navigator.pop(context);
-          }(),
-          style: TextStyle(
-            fontSize: 20,
-            color: Colors.black,
-            decorationStyle: TextDecorationStyle.wavy,
+          child: Center(
+            child: Text(
+              _decryptNote(password),
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.black,
+                decorationStyle: TextDecorationStyle.wavy,
+              ),
+            ),
           ),
-        )))),
+        ),
       );
 }

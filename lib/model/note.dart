@@ -1,6 +1,8 @@
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class Note {
   String id;
@@ -10,47 +12,27 @@ class Note {
   Map<String, dynamic> toJson() =>
       {"id": this.id, "title": this.title, "content": this.content};
 
-  enc.Key _generateKey(String password) {
-    String key = password;
-
-    if (password.length < 32) {
-      final diff = 32 - password.length;
-      final rep = diff ~/ password.length;
-      final mod = diff % password.length;
-
-      for (var i = 0; i < rep; i++) {
-        key += password;
-      }
-
-      if (mod != 0) {
-        for (var i = 0; i < mod; i++) {
-          key += password[i];
-        }
-      }
-    }
-
-    return enc.Key.fromUtf8(key);
+  String _generateMd5(String input) {
+    return md5.convert(utf8.encode(input)).toString();
   }
+
+  enc.Key _generateKey(String password) =>
+      enc.Key.fromUtf8(_generateMd5(password));
 
   String decrypt(String password) {
     final key = _generateKey(password);
     final iv = enc.IV.fromLength(16);
+    final encrypter = enc.Encrypter(enc.AES(key));
 
-    var encrypter = enc.Encrypter(enc.AES(key));
-
-    var decrypted =
-        encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
-    return decrypted;
+    return encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
   }
 
   String encrypt(String content, String password) {
     final key = _generateKey(password);
     final iv = enc.IV.fromLength(16);
+    final encrypter = enc.Encrypter(enc.AES(key));
 
-    var encrypter = enc.Encrypter(enc.AES(key));
-    var encrypted = encrypter.encrypt(content, iv: iv);
-
-    return encrypted.base64;
+    return encrypter.encrypt(content, iv: iv).base64;
   }
 
   Map<String, dynamic> toMap() {
@@ -69,9 +51,18 @@ class Note {
     return this;
   }
 
-  Note({@required this.title, @required content, @required password}) {
+  Note(
+      {@required this.title,
+      @required String content,
+      @required String password}) {
     this.id = Uuid().v4();
     this.content = encrypt(content, password);
+  }
+
+  Note.parseFromDb(dynamic map) {
+    this.id = map['id'];
+    this.title = map['title'];
+    this.content = map['content'];
   }
 
   Note.fromDb(

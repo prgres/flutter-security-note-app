@@ -1,40 +1,28 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:note_app/note.dart';
+import 'package:note_app/model/note.dart';
 import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/secure_storage.dart';
 
-class NoteNewView extends StatefulWidget {
-  NoteNewView({Key key}) : super(key: key);
+class NoteNewView extends StatelessWidget {
+  NoteNewView();
 
-  @override
-  State<StatefulWidget> createState() => _NoteNewView();
-}
-
-class _NoteNewView extends State<NoteNewView> {
-  _NoteNewView();
   final contenteController = TextEditingController();
   final titleController = TextEditingController();
-  final passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-  @override
-  void dispose() {
-    contenteController.dispose();
-    titleController.dispose();
-    passwordController.dispose();
+  void _save(BuildContext context) async => await SecureStorage()
+      .readPassword()
+      .then((pass) => Note(
+            title: titleController.text,
+            content: contenteController.text,
+            password: pass,
+          ))
+      .then((newNote) => NoteRepository().insertNote(newNote))
+      .whenComplete(() => Navigator.pop(context));
 
-    super.dispose();
-  }
-
-  void _save() async {
-    var newNote = Note(
-        title: titleController.text,
-        content: contenteController.text,
-        password: passwordController.text);
-
-    await NoteRepository().insertNote(newNote);
-
-    Navigator.pop(context);
-  }
+  String validateTextFrom(value) =>
+      (value.isEmpty) ? 'Please enter some text' : null;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -42,38 +30,43 @@ class _NoteNewView extends State<NoteNewView> {
           title: Text("New note"),
         ),
         body: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SingleChildScrollView(
-                child: Column(children: <Widget>[
-              TextField(
-                autofocus: true,
-                controller: titleController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Tittle',
-                ),
-              ),
-              SizedBox(height: 15),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Password',
-                ),
-              ),
-              SizedBox(height: 15),
-              TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Note',
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  Container(
+                      margin: const EdgeInsets.only(
+                        top: 5.0,
+                        bottom: 15.0,
+                      ),
+                      child: TextFormField(
+                          validator: validateTextFrom,
+                          autofocus: true,
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Tittle',
+                          ))),
+                  Container(
+                    child: TextFormField(
+                        validator: validateTextFrom,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Note',
+                        ),
+                        controller: contenteController,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 15),
                   ),
-                  controller: contenteController,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: 15),
-            ]))),
+                ],
+              ),
+            ),
+          ),
+        ),
         floatingActionButton: FloatingActionButton(
-          onPressed: _save,
+          onPressed: () => _save(context),
           tooltip: 'Increment',
           child: Icon(Icons.save),
         ),

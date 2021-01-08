@@ -1,6 +1,8 @@
-import 'package:note_app/note.dart';
+import 'package:note_app/model/note.dart';
 import 'package:note_app/services/database.dart';
 import 'package:sqflite/sqflite.dart';
+import 'crypto.dart';
+import 'login.dart';
 
 class NoteRepository {
   DatabaseConnection _notesDatabaseService;
@@ -18,8 +20,39 @@ class NoteRepository {
     return _database;
   }
 
-  Future<List<Map>> getNotesFromDB() async {
-    return await database.then((db) => db.query('notes'));
+  Future<List<Map>> getUserFromDB() async =>
+      await database.then((db) => db.query('user'));
+
+  Future<void> insertUser(String password) async => await database
+      .then((db) => db.insert(
+            'user',
+            {
+              "id": "default",
+              "password": Crypto().generatePasswordHash(password),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          ))
+      .whenComplete(() async => await LoginService().savePassword(password));
+
+  Future<void> updateUserPassword(String password) async => await database
+      .then((db) => db.update(
+            'user',
+            {
+              "id": "default",
+              "password": Crypto().generatePasswordHash(password),
+            },
+            where: 'id = ?',
+            whereArgs: ["default"],
+          ))
+      .whenComplete(() async => await LoginService().savePassword(password));
+
+  Future<List<Note>> getNotesFromDB() async {
+    final rawNotes = await database.then((db) => db.query('notes'));
+    List<Note> noteList = [];
+
+    rawNotes.forEach((e) => noteList.add(Note.parseFromDb(e)));
+
+    return noteList;
   }
 
   Future<String> insertNote(Note note) async {
@@ -30,22 +63,6 @@ class NoteRepository {
         ));
 
     return note.id;
-  }
-
-  List<Note> parseNoteToObj(List<Map> maps) {
-    List<Note> notesList = [];
-
-    if (maps.length > 0) {
-      maps.forEach((map) {
-        notesList.add(Note.fromDb(
-          id: map['id'],
-          title: map['title'],
-          content: map['content'],
-        ));
-      });
-    }
-
-    return notesList;
   }
 
   Future<void> deleteNote(String id) async {
@@ -65,10 +82,15 @@ class NoteRepository {
         ));
   }
 
-  Future<void> changePassword(
-      Note note, String oldPassword, String newPassword) async {
-    var updatedNote = note.changePassword(oldPassword, newPassword);
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    final allNote = await this.getNotesFromDB();
+    await updateUserPassword(newPassword);
 
-    await updateNote(updatedNote);
+    allNote.forEach((note) async {
+      var updatedNote = note.changePassword(oldPassword, newPassword);
+      await updateNote(updatedNote);
+    });
+
+    // this.getNotesFromDB()
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/home_screen.dart';
+import 'package:note_app/startup/startup.dart';
 
+// Startup
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(SecNoteApp());
@@ -16,7 +18,8 @@ class SecNoteApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       routes: {
-        '/': (context) => HomeScreen(),
+        '/home_screen': (context) => HomeScreen(),
+        '/': (context) => Startup(),
       },
     );
   }

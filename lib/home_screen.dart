@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:note_app/note.dart';
+import 'package:note_app/model/note.dart';
 import 'package:note_app/note_item.dart';
+import 'package:note_app/dialog/change_password.dart';
 import 'package:note_app/note_new.dart';
 import 'package:note_app/services/repository.dart';
 
@@ -16,12 +18,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<NoteItem> noteItemList = [];
 
-  void _addButtonTap() async {
-    await Navigator.push(
-        context, MaterialPageRoute(builder: (context) => NoteNewView()));
-
-    setNotesList();
-  }
+  void _addButtonTap() async => await Navigator.push(
+          context, MaterialPageRoute(builder: (context) => NoteNewView()))
+      .then((value) => setNotesList());
 
   @override
   void initState() {
@@ -33,71 +32,65 @@ class _HomeScreenState extends State<HomeScreen> {
     print("Entered setNotes");
     var fetchedNotes = await NoteRepository().getNotesFromDB();
 
-    setState(() {
-      refreshList(fetchedNotes);
-    });
+    setState(() => refreshList(fetchedNotes));
   }
 
-  void refreshList(notes) {
-    List<NoteItem> tmpList = [];
+  void refreshList(List<Note> notes) {
+    this.noteItemList = [];
 
-    for (var it in parseNoteToObj(notes)) {
-      tmpList.add(NoteItem(note: it, refreshCallback: setNotesList));
-    }
-
-    this.noteItemList = tmpList;
+    notes.forEach((e) =>
+        noteItemList.add(NoteItem(note: e, refreshCallback: setNotesList)));
   }
 
-  List<Note> parseNoteToObj(List<Map> maps) {
-    List<Note> notesList = [];
-
-    if (maps.length == 0) {
-      return notesList;
-    }
-
-    maps.forEach((map) {
-      notesList.add(Note.fromDb(
-        id: map['id'],
-        title: map['title'],
-        content: map['content'],
-      ));
-    });
-
-    return notesList;
-  }
+  void _settingsButtonTap() async => await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) =>
+          NoteItemChangePasswordDialog(refreshCallback: setNotesList));
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
+        appBar: _buildAppBar(),
         body: _buildList(),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _addButtonTap,
-          tooltip: 'Increment',
-          child: Icon(Icons.add),
-        ),
       );
 
-  Widget _buildList() {
-    return noteItemList.length != 0
-        ? RefreshIndicator(
-            child: ListView.builder(
-                padding: EdgeInsets.only(
-                    left: 20.0, right: 20.0, top: 20.0, bottom: 20.0),
-                itemCount: noteItemList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return new Card(
-                    margin: EdgeInsets.only(bottom: 10),
-                    child: Column(
-                      children: <Widget>[
-                        noteItemList[index],
-                      ],
-                    ),
-                  );
-                }),
-            onRefresh: setNotesList,
-          )
-        : Center(child: CircularProgressIndicator());
-  }
+  Widget _buildList() =>
+      (noteItemList.length != 0) ? _buildRefreshIndicator() : null;
+
+  Widget _buildAppBar() => AppBar(
+          title: Text(widget.title),
+          leading: CupertinoButton(
+            onPressed: _addButtonTap,
+            child: Icon(
+              CupertinoIcons.add,
+              color: Colors.white,
+            ),
+          ),
+          actions: [
+            FlatButton(
+              onPressed: _settingsButtonTap,
+              child: Icon(
+                Icons.settings,
+                color: Colors.white,
+              ),
+            )
+          ]);
+
+  Widget _buildRefreshIndicator() => RefreshIndicator(
+        onRefresh: setNotesList,
+        child: ListView.builder(
+            padding: EdgeInsets.only(
+                left: 20.0, right: 20.0, top: 20.0, bottom: 20.0),
+            itemCount: noteItemList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return new Card(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Column(
+                  children: <Widget>[
+                    noteItemList[index],
+                  ],
+                ),
+              );
+            }),
+      );
 }
