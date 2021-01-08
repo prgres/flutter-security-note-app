@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:note_app/services/biometric.dart';
 import 'package:note_app/services/login.dart';
+import 'package:note_app/services/secure_storage.dart';
 
 class LoginDialog extends StatefulWidget {
   LoginDialog({Key key}) : super(key: key);
@@ -14,18 +17,32 @@ class _LoginDialogState extends State<LoginDialog> {
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  void _handleFailedLogin() {
-    print("failed valid");
-    passwordController.text = "";
-
-    return;
-  }
+  void _handleFailedLogin() => passwordController.text = "";
 
   Future<void> _handleSuccLogin() async => await LoginService()
       .savePassword(passwordController.text)
       .whenComplete(() => Navigator.pop(context));
 
-  void loginButtonOnPressed() async =>
+  @override
+  void initState() {
+    super.initState();
+    _biometricButtonOnPressed();
+  }
+
+  void _biometricButtonOnPressed() async {
+    if (!await Biometric().checkBiometrics()) return;
+
+    if (!await Biometric().authenticate()) return;
+
+    await SecureStorage().readPassword().then((pass) async => (pass == null)
+        ? null
+        : {
+            setState(() => passwordController.text = pass),
+            await _loginButtonOnPressed()
+          });
+  }
+
+  Future<void> _loginButtonOnPressed() async =>
       (!await LoginService().validatePassword(passwordController.text))
           ? _handleFailedLogin()
           : await _handleSuccLogin();
@@ -42,7 +59,7 @@ class _LoginDialogState extends State<LoginDialog> {
           actions: [
             FlatButton(
               child: Text("Unlock"),
-              onPressed: loginButtonOnPressed,
+              onPressed: _loginButtonOnPressed,
             ),
           ],
           content: IntrinsicHeight(
@@ -66,6 +83,10 @@ class _LoginDialogState extends State<LoginDialog> {
                         labelText: 'Password',
                       ),
                     ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.fingerprint),
+                    onPressed: _biometricButtonOnPressed,
                   ),
                 ],
               ),
