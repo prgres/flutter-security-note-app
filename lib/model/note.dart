@@ -22,8 +22,8 @@ class Note {
   String decrypt(String password) {
     final key = _generateKey(password);
 
-    var _encryptedNote = this.content;
-    var _encryptedParts = _encryptedNote.split(";;__;;");
+    final _encryptedNote = this.content;
+    final _encryptedParts = _encryptedNote.split(";;__;;");
 
     if (_encryptedParts.length != 2) throw Error();
 
@@ -35,19 +35,20 @@ class Note {
     return encrypter.decrypt64(_encryptedParts[1], iv: iv);
   }
 
-  String getRandString(int len) {
-    var random = Random.secure();
-    var values = List<int>.generate(len, (i) => random.nextInt(255));
+  String _getRandString(int len) {
+    final random = Random.secure();
+    final values = List<int>.generate(len, (i) => random.nextInt(255));
+
     return base64UrlEncode(values);
   }
 
   String encrypt(String content, String password) {
     final key = _generateKey(password);
-    final _iv = getRandString(8);
+    final _iv = _getRandString(8);
     final iv = enc.IV.fromUtf8(_iv);
 
     final encrypter = enc.Encrypter(enc.AES(key));
-    var content64 =
+    final content64 =
         iv.base64 + ";;__;;" + encrypter.encrypt(content, iv: iv).base64;
 
     return content64;

@@ -12,17 +12,20 @@ class NoteItem extends StatelessWidget {
   final Function refreshCallback;
   final Note note;
 
-  Future<void> showNoteBtn(context) async {
-    var pass = await SecureStorage().readPassword();
+  Future<void> showNoteBtn(context) async =>
+      await SecureStorage().readPassword().then((pass) => Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => NoteView(
+                    note: note,
+                    password: pass,
+                  ))));
 
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => NoteView(
-                  note: note,
-                  password: pass,
-                )));
-  }
+  Future<void> deleteNoteBtn(context) async => await showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => NoteItemDeleteDialog(note.id))
+      .then((value) => refreshCallback());
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -36,14 +39,12 @@ class NoteItem extends StatelessWidget {
               caption: 'Delete',
               color: Colors.red,
               icon: Icons.delete,
-              onTap: () async => await showDialog(
-                      context: context,
-                      barrierDismissible: true,
-                      builder: (context) => NoteItemDeleteDialog(note.id))
-                  .then((value) => refreshCallback()),
+              onTap: () async => deleteNoteBtn(context),
             ),
           ],
-          dismissal: SlidableDismissal(child: SlidableDrawerDismissal()),
+          dismissal: SlidableDismissal(
+              onDismissed: (actionType) => deleteNoteBtn(context),
+              child: SlidableDrawerDismissal()),
           child: ListTile(title: Text(note.title)),
         ),
       ]));
