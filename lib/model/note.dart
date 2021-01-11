@@ -1,8 +1,9 @@
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/material.dart';
+import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+import 'dart:math';
 
 class Note {
   String id;
@@ -12,27 +13,44 @@ class Note {
   Map<String, dynamic> toJson() =>
       {"id": this.id, "title": this.title, "content": this.content};
 
-  String _generateMd5(String input) {
-    return md5.convert(utf8.encode(input)).toString();
-  }
+  String _generateMd5(String input) =>
+      md5.convert(utf8.encode(input)).toString();
 
   enc.Key _generateKey(String password) =>
       enc.Key.fromUtf8(_generateMd5(password));
 
   String decrypt(String password) {
     final key = _generateKey(password);
-    final iv = enc.IV.fromLength(16);
+
+    var _encryptedNote = this.content;
+    var _encryptedParts = _encryptedNote.split(";;__;;");
+
+    if (_encryptedParts.length != 2) throw Error();
+
+    final _iv64 = _encryptedParts[0];
+    final _iv = utf8.decode(base64.decode(_iv64));
+    final iv = enc.IV.fromUtf8(_iv);
     final encrypter = enc.Encrypter(enc.AES(key));
 
-    return encrypter.decrypt(enc.Encrypted.fromBase64(this.content), iv: iv);
+    return encrypter.decrypt64(_encryptedParts[1], iv: iv);
+  }
+
+  String getRandString(int len) {
+    var random = Random.secure();
+    var values = List<int>.generate(len, (i) => random.nextInt(255));
+    return base64UrlEncode(values);
   }
 
   String encrypt(String content, String password) {
     final key = _generateKey(password);
-    final iv = enc.IV.fromLength(16);
-    final encrypter = enc.Encrypter(enc.AES(key));
+    final _iv = getRandString(8);
+    final iv = enc.IV.fromUtf8(_iv);
 
-    return encrypter.encrypt(content, iv: iv).base64;
+    final encrypter = enc.Encrypter(enc.AES(key));
+    var content64 =
+        iv.base64 + ";;__;;" + encrypter.encrypt(content, iv: iv).base64;
+
+    return content64;
   }
 
   Map<String, dynamic> toMap() {
@@ -44,9 +62,7 @@ class Note {
   }
 
   Note changePassword(String oldPassword, newPassword) {
-    var decrypted = decrypt(oldPassword);
-    var encrypted = encrypt(decrypted, newPassword);
-    this.content = encrypted;
+    this.content = encrypt(decrypt(oldPassword), newPassword);
 
     return this;
   }
