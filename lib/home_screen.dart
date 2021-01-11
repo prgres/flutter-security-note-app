@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/model/note.dart';
-import 'package:note_app/note_item.dart';
+import 'package:note_app/model_view/note_item.dart';
 import 'package:note_app/dialog/change_password.dart';
-import 'package:note_app/note_new.dart';
+import 'package:note_app/model_view/note_new.dart';
 import 'package:note_app/services/repository.dart';
 
 class HomeScreen extends StatefulWidget {

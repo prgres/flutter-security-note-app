@@ -2,7 +2,7 @@ import 'package:note_app/model/note.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/dialog/delete_note.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:note_app/note_view.dart';
+import 'package:note_app/model_view/note_view.dart';
 import 'package:note_app/services/secure_storage.dart';
 
 class NoteItem extends StatelessWidget {
