@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:encrypt/encrypt.dart' as enc;
+import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
@@ -16,12 +19,14 @@ class Note {
   String _generateMd5(String input) =>
       md5.convert(utf8.encode(input)).toString();
 
-  enc.Key _generateKey(String password) =>
-      enc.Key.fromUtf8(_generateMd5(password));
+  enc.Key _generateKey(String password, String salt) =>
+      enc.Key.fromUtf8(_generateMd5(password)).stretch(32,
+          iterationCount: 100000, salt: Uint8List.fromList(salt.codeUnits));
 
-  String decrypt(String password) {
-    final key = _generateKey(password);
+  // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#modern-algorithms
 
+  String decrypt(String password, String salt) {
+    final key = _generateKey(password, salt);
     final _encryptedNote = this.content;
     final _encryptedParts = _encryptedNote.split(";;__;;");
 
@@ -42,8 +47,11 @@ class Note {
     return base64UrlEncode(values);
   }
 
-  String encrypt(String content, String password) {
-    final key = _generateKey(password);
+  String encrypt(String content, String password, String salt) {
+    print("---debug");
+    print(salt);
+
+    final key = _generateKey(password, salt);
     final _iv = _getRandString(8);
     final iv = enc.IV.fromUtf8(_iv);
 
@@ -62,8 +70,8 @@ class Note {
     };
   }
 
-  Note changePassword(String oldPassword, newPassword) {
-    this.content = encrypt(decrypt(oldPassword), newPassword);
+  Note changePassword(String oldPassword, newPassword, String salt) {
+    this.content = encrypt(decrypt(oldPassword, salt), newPassword, salt);
 
     return this;
   }
@@ -71,9 +79,10 @@ class Note {
   Note(
       {@required this.title,
       @required String content,
-      @required String password}) {
+      @required String password,
+      @required String salt}) {
     this.id = Uuid().v4();
-    this.content = encrypt(content, password);
+    this.content = encrypt(content, password, salt);
   }
 
   Note.parseFromDb(dynamic map) {

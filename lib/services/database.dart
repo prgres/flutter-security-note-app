@@ -9,7 +9,7 @@ class DatabaseConnection {
         .execute(
             "CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, title TEXT, content TEXT)")
         .whenComplete(() async => await db.execute(
-            "CREATE TABLE IF NOT EXISTS user(id TEXT PRIMARY KEY, password TEXT)"));
+            "CREATE TABLE IF NOT EXISTS user(id TEXT PRIMARY KEY, password TEXT, salt TEXT)"));
   }
 
   _onUpgradeDatabase(Database db, int oldVersion, int newVersion) async {

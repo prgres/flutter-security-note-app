@@ -3,14 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:note_app/model/note.dart';
 
 class NoteView extends StatelessWidget {
-  NoteView({Key key, @required this.note, @required this.password});
+  NoteView(
+      {Key key,
+      @required this.note,
+      @required this.password,
+      @required this.salt});
 
   final Note note;
   final String password;
+  final String salt;
 
-  String _decryptNote(String password) {
+  String _decryptNote(String password, String salt) {
     try {
-      return note.decrypt(password);
+      return note.decrypt(password, salt);
     } catch (e) {
       print("decryption failed");
       print(e);
@@ -24,7 +29,7 @@ class NoteView extends StatelessWidget {
         body: Container(
           child: Center(
             child: Text(
-              _decryptNote(password),
+              _decryptNote(password, salt),
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.black,

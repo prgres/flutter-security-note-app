@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:note_app/model/user.dart';
 import 'package:note_app/services/repository.dart';
 import 'package:note_app/services/secure_storage.dart';
+import 'package:flutter_bcrypt/flutter_bcrypt.dart';
 
 class LoginService {
   Future<User> getUser() async => await NoteRepository()
@@ -15,6 +16,8 @@ class LoginService {
 
   Future<void> savePassword(String password) async =>
       await SecureStorage().writePassword(password);
+
+  Future<void> getUserSalt() {}
 
   String generatePasswordHash(String password) =>
       sha512.convert(utf8.encode(password)).toString();

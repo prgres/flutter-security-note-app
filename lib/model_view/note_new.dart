@@ -14,10 +14,10 @@ class NoteNewView extends StatelessWidget {
   void _save(BuildContext context) async => await SecureStorage()
       .readPassword()
       .then((pass) => Note(
-            title: titleController.text,
-            content: contenteController.text,
-            password: pass,
-          ))
+          title: titleController.text,
+          content: contenteController.text,
+          password: pass,
+          salt: NoteRepository))
       .then((newNote) => NoteRepository().insertNote(newNote))
       .whenComplete(() => Navigator.pop(context));
 
