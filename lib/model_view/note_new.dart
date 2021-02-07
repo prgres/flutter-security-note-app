@@ -16,8 +16,7 @@ class NoteNewView extends StatelessWidget {
       .then((pass) => Note(
           title: titleController.text,
           content: contenteController.text,
-          password: pass,
-          salt: NoteRepository))
+          password: pass))
       .then((newNote) => NoteRepository().insertNote(newNote))
       .whenComplete(() => Navigator.pop(context));
 

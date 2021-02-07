@@ -11,22 +11,27 @@ import 'dart:math';
 class Note {
   String id;
   String title;
+  Uint8List salt;
   String content;
+
+  static const int desireKeyLength = 32;
 
   Map<String, dynamic> toJson() =>
       {"id": this.id, "title": this.title, "content": this.content};
 
-  String _generateMd5(String input) =>
-      md5.convert(utf8.encode(input)).toString();
+  // String _generateMd5(String input) =>
+  // md5.convert(utf8.encode(input)).toString();
 
-  enc.Key _generateKey(String password, String salt) =>
-      enc.Key.fromUtf8(_generateMd5(password)).stretch(32,
-          iterationCount: 100000, salt: Uint8List.fromList(salt.codeUnits));
+  enc.Key _generateKey(String password) =>
+      // enc.Key.fromUtf8(_generateMd5(password)).stretch(Note.desireKeyLength,
+      enc.Key.fromUtf8(password).stretch(Note.desireKeyLength,
+          iterationCount: 10000, salt: this.salt);
+  // salt: Uint8List.fromList(this.salt.codeUnits));
 
   // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#modern-algorithms
 
-  String decrypt(String password, String salt) {
-    final key = _generateKey(password, salt);
+  String decrypt(String password) {
+    final key = _generateKey(password);
     final _encryptedNote = this.content;
     final _encryptedParts = _encryptedNote.split(";;__;;");
 
@@ -47,11 +52,8 @@ class Note {
     return base64UrlEncode(values);
   }
 
-  String encrypt(String content, String password, String salt) {
-    print("---debug");
-    print(salt);
-
-    final key = _generateKey(password, salt);
+  String encrypt(String content, String password) {
+    final key = _generateKey(password);
     final _iv = _getRandString(8);
     final iv = enc.IV.fromUtf8(_iv);
 
@@ -67,11 +69,12 @@ class Note {
       'id': this.id,
       'title': this.title,
       'content': this.content,
+      'salt': this.salt,
     };
   }
 
-  Note changePassword(String oldPassword, newPassword, String salt) {
-    this.content = encrypt(decrypt(oldPassword, salt), newPassword, salt);
+  Note changePassword(String oldPassword, newPassword) {
+    this.content = encrypt(decrypt(oldPassword), newPassword);
 
     return this;
   }
@@ -79,16 +82,18 @@ class Note {
   Note(
       {@required this.title,
       @required String content,
-      @required String password,
-      @required String salt}) {
+      @required String password}) {
     this.id = Uuid().v4();
-    this.content = encrypt(content, password, salt);
+    this.salt = SecureRandom(Note.desireKeyLength).bytes;
+
+    this.content = encrypt(content, password);
   }
 
   Note.parseFromDb(dynamic map) {
     this.id = map['id'];
     this.title = map['title'];
     this.content = map['content'];
+    this.salt = map['salt'];
   }
 
   Note.fromDb(

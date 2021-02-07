@@ -15,7 +15,7 @@ class NoteView extends StatelessWidget {
 
   String _decryptNote(String password, String salt) {
     try {
-      return note.decrypt(password, salt);
+      return note.decrypt(password);
     } catch (e) {
       print("decryption failed");
       print(e);

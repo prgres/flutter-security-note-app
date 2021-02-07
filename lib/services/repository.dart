@@ -80,13 +80,12 @@ class NoteRepository {
     final allNote = await this.getNotesFromDB();
     await updateUserPassword(newPassword);
 
-    final user = await NoteRepository()
-        .getUserFromDB()
-        .then((v) => User.loadFromDb(userMap: v[0]));
+    // final user = await NoteRepository()
+    // .getUserFromDB()
+    // .then((v) => User.loadFromDb(userMap: v[0]));
 
     allNote.forEach((note) async {
-      var updatedNote =
-          note.changePassword(oldPassword, newPassword, user.salt);
+      var updatedNote = note.changePassword(oldPassword, newPassword);
       await updateNote(updatedNote);
     });
   }
