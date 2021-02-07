@@ -7,9 +7,9 @@ class DatabaseConnection {
     print("Database configure");
     await db
         .execute(
-            "CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, title TEXT, content TEXT)")
+            "CREATE TABLE IF NOT EXISTS notes(id TEXT PRIMARY KEY, title TEXT, content TEXT, salt TEXT)")
         .whenComplete(() async => await db.execute(
-            "CREATE TABLE IF NOT EXISTS user(id TEXT PRIMARY KEY, password TEXT)"));
+            "CREATE TABLE IF NOT EXISTS user(id TEXT PRIMARY KEY, password TEXT, salt TEXT)"));
   }
 
   _onUpgradeDatabase(Database db, int oldVersion, int newVersion) async {
@@ -33,7 +33,7 @@ class DatabaseConnection {
     return await getApplicationDocumentsDirectory()
         .then((directory) => join(directory.path, 'notes.db'))
         .then((path) async => await openDatabase(path,
-            version: 2,
+            version: 1,
             onConfigure: _onConfigureDatabase,
             onUpgrade: _onUpgradeDatabase,
             onDowngrade: _onDowngradeDatabase));

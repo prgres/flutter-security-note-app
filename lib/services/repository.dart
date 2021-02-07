@@ -1,4 +1,6 @@
+import 'package:encrypt/encrypt.dart';
 import 'package:note_app/model/note.dart';
+import 'package:note_app/model/user.dart';
 import 'package:note_app/services/database.dart';
 import 'package:sqflite/sqflite.dart';
 import 'login.dart';
@@ -25,10 +27,7 @@ class NoteRepository {
   Future<void> insertUser(String password) async => await database
       .then((db) => db.insert(
             'user',
-            {
-              "id": "default",
-              "password": LoginService().generatePasswordHash(password),
-            },
+            User.defaultUser(password: password).toMap(),
             conflictAlgorithm: ConflictAlgorithm.replace,
           ))
       .whenComplete(() async => await LoginService().savePassword(password));
@@ -36,10 +35,7 @@ class NoteRepository {
   Future<void> updateUserPassword(String password) async => await database
       .then((db) => db.update(
             'user',
-            {
-              "id": "default",
-              "password": LoginService().generatePasswordHash(password),
-            },
+            User.defaultUser(password: password).toMap(),
             where: 'id = ?',
             whereArgs: ["default"],
           ))
@@ -73,10 +69,9 @@ class NoteRepository {
           ));
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    final allNote = await this.getNotesFromDB();
     await updateUserPassword(newPassword);
 
-    allNote.forEach((note) async {
+    (await this.getNotesFromDB()).forEach((note) async {
       var updatedNote = note.changePassword(oldPassword, newPassword);
       await updateNote(updatedNote);
     });

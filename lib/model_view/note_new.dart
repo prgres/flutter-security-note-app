@@ -5,8 +5,6 @@ import 'package:note_app/services/repository.dart';
 import 'package:note_app/services/secure_storage.dart';
 
 class NoteNewView extends StatelessWidget {
-  NoteNewView();
-
   final contenteController = TextEditingController();
   final titleController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
