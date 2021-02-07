@@ -5,8 +5,6 @@ import 'package:note_app/services/repository.dart';
 import 'package:note_app/services/secure_storage.dart';
 
 class NoteNewView extends StatelessWidget {
-  NoteNewView();
-
   final contenteController = TextEditingController();
   final titleController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -14,9 +12,10 @@ class NoteNewView extends StatelessWidget {
   void _save(BuildContext context) async => await SecureStorage()
       .readPassword()
       .then((pass) => Note(
-          title: titleController.text,
-          content: contenteController.text,
-          password: pass))
+            title: titleController.text,
+            content: contenteController.text,
+            password: pass,
+          ))
       .then((newNote) => NoteRepository().insertNote(newNote))
       .whenComplete(() => Navigator.pop(context));
 

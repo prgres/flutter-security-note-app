@@ -1,4 +1,6 @@
+import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
+import 'package:note_app/services/login.dart';
 import 'package:uuid/uuid.dart';
 
 class User {
@@ -6,8 +8,8 @@ class User {
   String password;
   String salt;
 
-  Map<String, dynamic> toJson() =>
-      {"id": this.id, "password": this.password, "salt": this.salt};
+  static const String defaultUserID = "default";
+  static const String biometricUserID = "biometric";
 
   Map<String, dynamic> toMap() => {
         'id': this.id,
@@ -15,8 +17,16 @@ class User {
         'salt': this.salt,
       };
 
-  User({@required this.password}) {
-    this.id = Uuid().v4();
+  User.biometricUser({@required this.password}) {
+    this.id = User.biometricUserID;
+    this.password = LoginService().generatePasswordHash(password);
+    this.salt = String.fromCharCodes(SecureRandom(128).bytes);
+  }
+
+  User.defaultUser({@required this.password}) {
+    this.id = User.defaultUserID;
+    this.password = LoginService().generatePasswordHash(password);
+    this.salt = String.fromCharCodes(SecureRandom(128).bytes);
   }
 
   User.fromDb({

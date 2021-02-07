@@ -1,9 +1,7 @@
 import 'dart:typed_data';
-
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
-import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:math';
@@ -15,63 +13,51 @@ class Note {
   String content;
 
   static const int desireKeyLength = 32;
+  static const String encryptedPartsSplitter = ";;__;;";
 
   Map<String, dynamic> toJson() =>
       {"id": this.id, "title": this.title, "content": this.content};
 
-  // String _generateMd5(String input) =>
-  // md5.convert(utf8.encode(input)).toString();
-
-  enc.Key _generateKey(String password) =>
-      // enc.Key.fromUtf8(_generateMd5(password)).stretch(Note.desireKeyLength,
-      enc.Key.fromUtf8(password).stretch(Note.desireKeyLength,
-          iterationCount: 10000, salt: this.salt);
-  // salt: Uint8List.fromList(this.salt.codeUnits));
+  enc.Key _generateKey(String password) => enc.Key.fromUtf8(password).stretch(
+        Note.desireKeyLength,
+        iterationCount: 10000,
+        salt: this.salt,
+      );
 
   // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#modern-algorithms
 
   String decrypt(String password) {
-    final key = _generateKey(password);
-    final _encryptedNote = this.content;
-    final _encryptedParts = _encryptedNote.split(";;__;;");
+    final _encryptedParts = this.content.split(Note.encryptedPartsSplitter);
 
     if (_encryptedParts.length != 2) throw Error();
 
     final _iv64 = _encryptedParts[0];
-    final _iv = utf8.decode(base64.decode(_iv64));
-    final iv = enc.IV.fromUtf8(_iv);
-    final encrypter = enc.Encrypter(enc.AES(key));
 
-    return encrypter.decrypt64(_encryptedParts[1], iv: iv);
+    return enc.Encrypter(enc.AES(_generateKey(password))).decrypt64(
+      _encryptedParts[1],
+      iv: enc.IV.fromUtf8(utf8.decode(base64.decode(_iv64))),
+    );
   }
 
-  String _getRandString(int len) {
-    final random = Random.secure();
-    final values = List<int>.generate(len, (i) => random.nextInt(255));
-
-    return base64UrlEncode(values);
-  }
+  String _getRandString(int len) => base64UrlEncode(
+      List<int>.generate(len, (i) => Random.secure().nextInt(255)));
 
   String encrypt(String content, String password) {
-    final key = _generateKey(password);
-    final _iv = _getRandString(8);
-    final iv = enc.IV.fromUtf8(_iv);
+    final iv = enc.IV.fromUtf8(_getRandString(8));
 
-    final encrypter = enc.Encrypter(enc.AES(key));
-    final content64 =
-        iv.base64 + ";;__;;" + encrypter.encrypt(content, iv: iv).base64;
-
-    return content64;
+    return iv.base64 +
+        Note.encryptedPartsSplitter +
+        enc.Encrypter(enc.AES(_generateKey(password)))
+            .encrypt(content, iv: iv)
+            .base64;
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': this.id,
-      'title': this.title,
-      'content': this.content,
-      'salt': this.salt,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+        'id': this.id,
+        'title': this.title,
+        'content': this.content,
+        'salt': this.salt,
+      };
 
   Note changePassword(String oldPassword, newPassword) {
     this.content = encrypt(decrypt(oldPassword), newPassword);
@@ -79,13 +65,13 @@ class Note {
     return this;
   }
 
-  Note(
-      {@required this.title,
-      @required String content,
-      @required String password}) {
+  Note({
+    @required this.title,
+    @required String content,
+    @required String password,
+  }) {
     this.id = Uuid().v4();
     this.salt = SecureRandom(Note.desireKeyLength).bytes;
-
     this.content = encrypt(content, password);
   }
 
@@ -96,6 +82,9 @@ class Note {
     this.salt = map['salt'];
   }
 
-  Note.fromDb(
-      {@required this.id, @required this.title, @required this.content});
+  Note.fromDb({
+    @required this.id,
+    @required this.title,
+    @required this.content,
+  });
 }
