@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/services/login.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 import 'package:note_app/dialog/invalid_password.dart';
 import 'package:note_app/dialog/password_change_succesfly.dart';
 
@@ -21,25 +21,29 @@ class NoteItemChangePasswordDialog extends StatelessWidget {
   void dismissBtnOnTap(BuildContext context) async =>
       clearPasswordsControllerText().whenComplete(() => Navigator.pop(context));
 
-  void changeBtnOnTap(BuildContext context) async =>
-      (!await LoginService().validatePassword(oldPasswordController.text))
-          ? await clearPasswordsControllerText().whenComplete(() => showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => InvalidPasswordDialog()))
-          : await NoteRepository()
-              .changePassword(
-                  oldPasswordController.text, newPasswordController.text)
-              .whenComplete(() {
-              LoginService().savePassword(newPasswordController.text);
-              Navigator.pop(context);
-              clearPasswordsControllerText();
-              refreshCallback();
-              showDialog(
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (context) => PasswordChangeSuccessfullyDialog());
-            });
+  Future<void> handleInvalidPassword(BuildContext context) async =>
+      await clearPasswordsControllerText().whenComplete(() => showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => InvalidPasswordDialog()));
+
+  Future<void> handleSuccPassword(BuildContext context) async =>
+      await NoteRepository()
+          .updateUserPassword(newPasswordController.text)
+          .whenComplete(() {
+        Navigator.pop(context);
+        clearPasswordsControllerText();
+        refreshCallback();
+        showDialog(
+            context: context,
+            barrierDismissible: true,
+            builder: (context) => PasswordChangeSuccessfullyDialog());
+      });
+
+  void changeBtnOnTap(BuildContext context) async => (!await LoginService()
+          .validateDefaultUserPassword(oldPasswordController.text))
+      ? await handleInvalidPassword(context)
+      : await handleSuccPassword(context);
 
   String validatePasswordField(dynamic value) =>
       (value.isEmpty) ? 'Please enter some text' : null;

@@ -1,27 +1,33 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:note_app/model/user.dart';
 import 'package:note_app/services/repository.dart';
 import 'package:note_app/services/secure_storage.dart';
-import 'package:flutter_bcrypt/flutter_bcrypt.dart';
+import 'package:note_app/util/crypto.dart';
 
 class LoginService {
-  Future<User> getUser() async => await NoteRepository()
-      .getUserFromDB()
-      .then((v) => User.loadFromDb(userMap: v[0]));
+  Future<void> handleBiometricLogin() async {
+    var biometricUserPassword = SecureStorage().readBiometricUserPassword();
+    var biometricUser = await NoteRepository().getBiometricUserFromDB();
+    var notePassword = biometricUser.getNotePassword(biometricUserPassword);
+    this.saveNotePassword(notePassword);
+  }
 
-  Future<bool> validatePassword(String password) async =>
-      (await this.getUser().then((user) => user.password) ==
-          generatePasswordHash(password));
+  Future<bool> handleDefaultLogin(String pass) async =>
+      await validateDefaultUserPassword(pass).then((flag) async => flag
+          ? await NoteRepository()
+              .getDefaultUserFromDB()
+              .then((user) => user.getNotePassword(pass))
+              .then((notePassword) => this.saveNotePassword(notePassword))
+              .then((_) => true)
+          : false);
 
-  Future<void> savePassword(String password) async =>
-      await SecureStorage().writePassword(password);
+  Future<bool> validateDefaultUserPassword(String password) async =>
+      await NoteRepository()
+          .getDefaultUserFromDB()
+          .then((user) => validatePassword(user, password));
 
-  Future<void> getUserSalt() {}
+  Future<bool> validatePassword(User user, String password) async =>
+      user.password == CryptoUtil.generatePasswordHash(password);
 
-  String generatePasswordHash(String password) =>
-      sha512.convert(utf8.encode(password)).toString();
-
-  String generatePasswordHash256(String password) =>
-      sha256.convert(utf8.encode(password)).toString();
+  Future<void> saveNotePassword(String notePassword) async =>
+      await SecureStorage().writePassword(notePassword);
 }

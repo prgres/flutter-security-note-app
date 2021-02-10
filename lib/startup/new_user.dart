@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:note_app/model/user.dart';
+import 'package:note_app/services/login.dart';
 import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/secure_storage.dart';
+import 'package:note_app/util/crypto.dart';
 
-class NewUserDialog extends StatefulWidget {
-  NewUserDialog({Key key}) : super(key: key);
-
-  @override
-  State<StatefulWidget> createState() => _NewUserDialogState();
-}
-
-class _NewUserDialogState extends State<NewUserDialog> {
-  _NewUserDialogState();
-
+class NewUserDialog extends StatelessWidget {
   final passwordController = TextEditingController();
   final rePasswordController = TextEditingController();
   final _formKeyPass = GlobalKey<FormState>();
@@ -23,11 +18,41 @@ class _NewUserDialogState extends State<NewUserDialog> {
   String _textFromValidate(value) =>
       (value.isEmpty) ? 'Please enter some text' : null;
 
-  void craeteButtonOnPressed() async => (!_formKeyPass.currentState.validate())
-      ? clearControllerText()
-      : await NoteRepository()
-          .insertUser(passwordController.text)
-          .whenComplete(() => Navigator.pop(context));
+  Future<void> handleNewUser() async {
+    String notePassword = CryptoUtil.getRandString();
+    String biometricUserPassword = CryptoUtil.getRandString();
+
+    await NoteRepository().insertUser(
+        User.defaultUser(
+          password: passwordController.text,
+          notePassword: notePassword,
+        ),
+        notePassword);
+
+    await NoteRepository()
+        .insertUser(
+            User.biometricUser(
+                password: biometricUserPassword, notePassword: notePassword),
+            notePassword)
+        .then((value) =>
+            SecureStorage().writeBiometricUserPassword(biometricUserPassword));
+
+    LoginService().saveNotePassword(notePassword);
+  }
+
+  void craeteButtonOnPressed(BuildContext context) async =>
+      _formKeyPass.currentState.validate()
+          ? await handleNewUser().whenComplete(() => Navigator.pop(context))
+          : clearControllerText();
+
+  String passwordValidator(String value) {
+    if (value.isEmpty) return 'Please enter some text';
+
+    if (passwordController.text != rePasswordController.text)
+      return "Password must be equal";
+
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -40,7 +65,7 @@ class _NewUserDialogState extends State<NewUserDialog> {
           title: Text("Set a new password"),
           actions: [
             FlatButton(
-              onPressed: craeteButtonOnPressed,
+              onPressed: () => craeteButtonOnPressed(context),
               child: Text("Create"),
             ),
           ],
@@ -75,18 +100,7 @@ class _NewUserDialogState extends State<NewUserDialog> {
                       autofocus: true,
                       controller: rePasswordController,
                       obscureText: true,
-                      validator: (value) {
-                        if (value.isEmpty) {
-                          return 'Please enter some text';
-                        }
-
-                        if (passwordController.text !=
-                            rePasswordController.text) {
-                          return "Password must be equal";
-                        }
-
-                        return null;
-                      },
+                      validator: passwordValidator,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'confirm password',
