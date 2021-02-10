@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/model/user.dart';
 import 'package:note_app/services/login.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 import 'package:note_app/services/secure_storage.dart';
 import 'package:note_app/util/crypto.dart';
 

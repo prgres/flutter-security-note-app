@@ -4,7 +4,7 @@ import 'package:note_app/model/note.dart';
 import 'package:note_app/model_view/note_item.dart';
 import 'package:note_app/dialog/change_password.dart';
 import 'package:note_app/model_view/note_new.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 
 class HomeScreen extends StatefulWidget {
   final String title = "SecNoteApp";

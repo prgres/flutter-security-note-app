@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 import 'package:note_app/startup/new_user.dart';
 import 'package:note_app/startup/login.dart';
 
