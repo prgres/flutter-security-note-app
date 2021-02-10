@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/model/note.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 import 'package:note_app/services/secure_storage.dart';
 
 class NoteNewView extends StatelessWidget {

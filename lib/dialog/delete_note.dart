@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:note_app/services/repository.dart';
+import 'package:note_app/services/repository_note.dart';
 
 class NoteItemDeleteDialog extends StatelessWidget {
   NoteItemDeleteDialog(this.id);
