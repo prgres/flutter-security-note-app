@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:note_app/dialog/invalid_password.dart';
 import 'package:note_app/services/biometric.dart';
 import 'package:note_app/services/login.dart';
-import 'package:note_app/services/secure_storage.dart';
 
 class LoginDialog extends StatefulWidget {
   LoginDialog({Key key}) : super(key: key);
@@ -17,35 +17,48 @@ class _LoginDialogState extends State<LoginDialog> {
   final passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  void _handleFailedLogin() => passwordController.text = "";
-
-  Future<void> _handleSuccLogin() async => await LoginService()
-      .savePassword(passwordController.text)
-      .whenComplete(() => Navigator.pop(context));
-
   @override
   void initState() {
     super.initState();
     _biometricButtonOnPressed();
   }
 
-  void _biometricButtonOnPressed() async {
-    if (!await Biometric().checkBiometrics()) return;
-
-    if (!await Biometric().authenticate()) return;
-
-    await SecureStorage().readPassword().then((pass) async => (pass == null)
-        ? null
-        : {
-            setState(() => passwordController.text = pass),
-            await _loginButtonOnPressed()
-          });
+  @override
+  void dispose() {
+    passwordController.text = "";
+    super.dispose();
   }
 
+  Future<bool> _checkIfBiometricAvailable() async {
+    if (!await Biometric().checkBiometrics()) return false;
+
+    if (!await Biometric()
+        .getAvailableBiometrics()
+        .then((value) => value.length != 0)) return false;
+
+    if (!await Biometric().authenticate()) return false;
+
+    return true;
+  }
+
+  void _biometricButtonOnPressed() async => await _checkIfBiometricAvailable()
+      ? await LoginService()
+          .handleBiometricLogin()
+          .whenComplete(() => Navigator.pop(context))
+      : false;
+
   Future<void> _loginButtonOnPressed() async =>
-      (!await LoginService().validatePassword(passwordController.text))
-          ? _handleFailedLogin()
-          : await _handleSuccLogin();
+      (!await LoginService().handleDefaultLogin(passwordController.text))
+          ? await _handleFailedLogin()
+          : Navigator.pop(context);
+
+  Future<void> _handleFailedLogin() async {
+    passwordController.text = "";
+    await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => InvalidPasswordDialog());
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(

@@ -15,4 +15,10 @@ class SecureStorage {
 
   Future<void> writePassword(String pass) async =>
       await storage.then((st) => st.write(key: "password", value: pass));
+
+  Future<String> readBiometricUserPassword() async =>
+      await storage.then((st) => st.read(key: "biometric_user_password"));
+
+  Future<void> writeBiometricUserPassword(String pass) async => await storage
+      .then((st) => st.write(key: "biometric_user_password", value: pass));
 }

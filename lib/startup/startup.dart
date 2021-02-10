@@ -32,7 +32,7 @@ class _StartupState extends State<Startup> {
       .getUserFromDB()
       .then((fetchedUser) =>
           (fetchedUser.length == 0) ? handleNewUser() : handleLogin())
-      .then((value) => Navigator.popAndPushNamed(context, "/home_screen"));
+      .then((_) => Navigator.popAndPushNamed(context, "/home_screen"));
 
   @override
   Widget build(BuildContext context) => Scaffold(

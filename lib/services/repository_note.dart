@@ -1,4 +1,3 @@
-import 'package:encrypt/encrypt.dart';
 import 'package:note_app/model/note.dart';
 import 'package:note_app/model/user.dart';
 import 'package:note_app/services/database.dart';
@@ -24,22 +23,48 @@ class NoteRepository {
   Future<List<Map>> getUserFromDB() async =>
       await database.then((db) => db.query('user'));
 
-  Future<void> insertUser(String password) async => await database
-      .then((db) => db.insert(
-            'user',
-            User.defaultUser(password: password).toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          ))
-      .whenComplete(() async => await LoginService().savePassword(password));
+  Future<void> insertUser(User user, String notePassword) async =>
+      await database
+          .then((db) => db.insert(
+                'user',
+                user.toMap(),
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              ))
+          .whenComplete(
+              () async => await LoginService().saveNotePassword(notePassword));
 
-  Future<void> updateUserPassword(String password) async => await database
-      .then((db) => db.update(
+  Future<void> updateUserPassword(String password) async =>
+      await getDefaultUserFromDB()
+          .then((defaultUser) async => await database.then((db) => {
+                db.update(
+                  'user',
+                  User.defaultUser(
+                          password: password,
+                          salt: defaultUser.salt,
+                          notePassword: defaultUser.notePassword)
+                      .toMap(),
+                  where: 'id = ?',
+                  whereArgs: [User.defaultUserID],
+                )
+              }));
+
+  Future<User> getDefaultUserFromDB() async => await database
+      .then((db) => db.query(
             'user',
-            User.defaultUser(password: password).toMap(),
             where: 'id = ?',
-            whereArgs: ["default"],
+            whereArgs: [User.defaultUserID],
           ))
-      .whenComplete(() async => await LoginService().savePassword(password));
+      .then((users) =>
+          users.map((value) => (User.loadFromDb(userMap: value))).first);
+
+  Future<User> getBiometricUserFromDB() async => await database
+      .then((db) => db.query(
+            'user',
+            where: 'id = ?',
+            whereArgs: [User.biometricUserID],
+          ))
+      .then((users) =>
+          users.map((value) => (User.loadFromDb(userMap: value))).first);
 
   Future<List<Note>> getNotesFromDB() async =>
       await database.then((db) => db.query('notes')).then((rawNotes) =>
@@ -67,13 +92,4 @@ class NoteRepository {
             where: 'id = ?',
             whereArgs: [note.id],
           ));
-
-  Future<void> changePassword(String oldPassword, String newPassword) async {
-    await updateUserPassword(newPassword);
-
-    (await this.getNotesFromDB()).forEach((note) async {
-      var updatedNote = note.changePassword(oldPassword, newPassword);
-      await updateNote(updatedNote);
-    });
-  }
 }
